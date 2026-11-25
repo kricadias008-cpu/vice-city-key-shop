@@ -1,32 +1,32 @@
 import * as Dialog from "@radix-ui/react-dialog";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Check, Copy, KeyRound, ShoppingBag, X } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Check, Copy, KeyRound, ShieldCheck, ShoppingBag, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  formatBRL,
-  generateActivationKey,
-  loadOrders,
-  saveOrder,
-  validateActivationCode,
-  type GameItem,
-  type GameOrder,
-} from "../lib/catalog";
+import { formatBRL, rememberCode, type CatalogGame, type GameOrder } from "../lib/catalog";
+import { activateKey, purchaseGame } from "../lib/keys.functions";
 
 export type DialogMode = "purchase" | "redeem";
 
 interface GtaPurchaseDialogProps {
-  game: GameItem | null;
+  game: CatalogGame | null;
   initialMode: DialogMode;
   onClose: () => void;
 }
 
 export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDialogProps) {
+  const queryClient = useQueryClient();
+  const runPurchase = useServerFn(purchaseGame);
+  const runActivate = useServerFn(activateKey);
+
   const [mode, setMode] = useState<DialogMode>(initialMode);
   const [email, setEmail] = useState("");
   const [codeInput, setCodeInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [completedOrder, setCompletedOrder] = useState<GameOrder | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -35,12 +35,13 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
     setCodeInput("");
     setError(null);
     setCompletedOrder(null);
+    setSubmitting(false);
     setCopied(false);
   }, [game, initialMode]);
 
   if (!game) return null;
 
-  const handlePurchase = (e: React.FormEvent) => {
+  const handlePurchase = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedEmail = email.trim();
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
@@ -48,42 +49,68 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
       return;
     }
     setError(null);
-    const order: GameOrder = {
-      id: `ord_${Date.now()}`,
-      gameId: game.id,
-      gameTitle: game.title,
-      platform: game.platform,
-      priceCents: game.priceCents,
-      activationCode: generateActivationKey(game.codePrefix),
-      type: "purchase",
-      createdAt: new Date().toISOString(),
-    };
-    saveOrder(order);
-    setCompletedOrder(order);
-    toast.success(`${game.title} adquirido! Código liberado.`);
+    setSubmitting(true);
+    try {
+      const res = await runPurchase({
+        data: trimmedEmail ? { gameId: game.id, buyerEmail: trimmedEmail } : { gameId: game.id },
+      });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      rememberCode(res.order.activationCode);
+      setCompletedOrder(res.order);
+      await queryClient.invalidateQueries({ queryKey: ["catalog"] });
+      toast.success(`${game.title} adquirido! Chave reservada no cofre.`);
+    } catch {
+      setError("Erro ao processar a compra. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleRedeem = (e: React.FormEvent) => {
+  const handleRedeem = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = validateActivationCode(codeInput, game.codePrefix, loadOrders());
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
     setError(null);
-    const order: GameOrder = {
-      id: `ord_${Date.now()}`,
-      gameId: game.id,
-      gameTitle: game.title,
-      platform: game.platform,
-      priceCents: 0,
-      activationCode: result.code,
-      type: "redeem",
-      createdAt: new Date().toISOString(),
-    };
-    saveOrder(order);
-    setCompletedOrder(order);
-    toast.success(`Código de ${game.title} resgatado!`);
+    setSubmitting(true);
+    try {
+      const res = await runActivate({
+        data: { code: codeInput, expectedGameId: game.id },
+      });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      rememberCode(res.order.activationCode);
+      setCompletedOrder(res.order);
+      await queryClient.invalidateQueries({ queryKey: ["catalog"] });
+      toast.success(`Chave de ${game.title} ativada!`);
+    } catch {
+      setError("Erro ao validar a chave. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleActivateNow = async () => {
+    if (!completedOrder || completedOrder.status === "activated") return;
+    setSubmitting(true);
+    try {
+      const res = await runActivate({
+        data: { code: completedOrder.activationCode, expectedGameId: game.id },
+      });
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      setCompletedOrder(res.order);
+      await queryClient.invalidateQueries({ queryKey: ["catalog"] });
+      toast.success(`${game.title} ativado com sucesso!`);
+    } catch {
+      toast.error("Erro ao ativar a chave.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCopy = async (code: string) => {
@@ -123,9 +150,14 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
           {completedOrder ? (
             <div className="mt-6 space-y-5">
               <div className="rounded-lg border border-primary/40 bg-background/70 p-4">
-                <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                  {completedOrder.type === "purchase" ? "Código de ativação liberado" : "Código resgatado"}
-                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium uppercase tracking-wider text-primary">
+                    {completedOrder.status === "activated" ? "Chave ativada — jogo desbloqueado" : "Chave liberada"}
+                  </p>
+                  {completedOrder.status === "activated" && (
+                    <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+                  )}
+                </div>
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <code className="font-mono text-base font-semibold tracking-wider text-foreground">
                     {completedOrder.activationCode}
@@ -140,8 +172,21 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
                   </button>
                 </div>
               </div>
+              {completedOrder.status !== "activated" && (
+                <button
+                  type="button"
+                  disabled={submitting}
+                  onClick={handleActivateNow}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-primary/50 bg-primary/15 px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/25 disabled:opacity-60"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {submitting ? "Ativando..." : "Ativar chave agora"}
+                </button>
+              )}
               <p className="text-xs text-muted-foreground">
-                Seu código também ficou salvo em Meus pedidos neste navegador.
+                {completedOrder.status === "activated"
+                  ? "Esta chave foi validada e marcada como usada no servidor. Ninguém mais pode reutilizá-la."
+                  : "Esta chave foi reservada para você. Ative agora ou depois em Meus pedidos."}
               </p>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Link
@@ -202,7 +247,14 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
               {mode === "purchase" ? (
                 <form onSubmit={handlePurchase} className="mt-5 space-y-4">
                   <div className="flex items-center justify-between rounded-lg border border-border bg-background/60 px-4 py-3">
-                    <span className="text-sm text-muted-foreground">Total</span>
+                    <div>
+                      <span className="block text-sm text-muted-foreground">Total</span>
+                      <span className="text-xs text-primary">
+                        {game.availableCount === 1
+                          ? "1 chave em estoque"
+                          : `${game.availableCount} chaves em estoque`}
+                      </span>
+                    </div>
                     <span className="font-mono text-lg font-semibold text-foreground">
                       {formatBRL(game.priceCents)}
                     </span>
@@ -223,9 +275,10 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <button
                     type="submit"
-                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                    disabled={submitting || game.availableCount === 0}
+                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Confirmar compra e receber código
+                    {submitting ? "Reservando chave..." : "Confirmar compra e receber código"}
                   </button>
                 </form>
               ) : (
@@ -243,15 +296,16 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
                       className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm uppercase tracking-wider text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Formato esperado: {game.codePrefix}-XXXX-XXXX-XXXX
+                      A chave é validada no estoque real e só pode ser ativada uma vez.
                     </p>
                   </div>
                   {error && <p className="text-sm text-destructive">{error}</p>}
                   <button
                     type="submit"
-                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                    disabled={submitting}
+                    className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                   >
-                    Resgatar código
+                    {submitting ? "Validando chave..." : "Validar e ativar chave"}
                   </button>
                 </form>
               )}

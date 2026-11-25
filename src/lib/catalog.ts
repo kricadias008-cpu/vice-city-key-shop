@@ -1,78 +1,29 @@
-export interface GameItem {
+export interface CatalogGame {
   id: string;
   title: string;
   description: string;
   platform: string;
   priceCents: number;
-  inStock: boolean;
   codePrefix: string;
   featured?: boolean;
+  availableCount: number;
 }
 
-export type OrderType = "purchase" | "redeem";
+export type KeyStatus = "available" | "sold" | "activated";
 
 export interface GameOrder {
-  id: string;
+  keyId: string;
   gameId: string;
   gameTitle: string;
   platform: string;
   priceCents: number;
   activationCode: string;
-  type: OrderType;
-  createdAt: string;
+  status: "sold" | "activated";
+  purchasedAt: string | null;
+  activatedAt: string | null;
 }
 
-export const GAMES: GameItem[] = [
-  {
-    id: "gta-6",
-    title: "GTA 6",
-    description: "Retorno a Vice City em mundo aberto. Chave Rockstar.",
-    platform: "Rockstar",
-    priceCents: 34990,
-    inStock: true,
-    codePrefix: "GTA6",
-    featured: true,
-  },
-  {
-    id: "elden-ring",
-    title: "Elden Ring",
-    description: "RPG de ação em mundo aberto. Chave Steam.",
-    platform: "Steam",
-    priceCents: 19990,
-    inStock: false,
-    codePrefix: "ELDN",
-  },
-  {
-    id: "cyberpunk-2077",
-    title: "Cyberpunk 2077",
-    description: "Aventura em Night City. Chave GOG.",
-    platform: "GOG",
-    priceCents: 12990,
-    inStock: false,
-    codePrefix: "CYBR",
-  },
-  {
-    id: "hollow-knight",
-    title: "Hollow Knight",
-    description: "Metroidvania artesanal. Chave Steam.",
-    platform: "Steam",
-    priceCents: 4690,
-    inStock: false,
-    codePrefix: "HLLW",
-  },
-  {
-    id: "red-dead-redemption-2",
-    title: "Red Dead Redemption 2",
-    description: "Faroeste épico. Chave Rockstar.",
-    platform: "Rockstar",
-    priceCents: 14990,
-    inStock: false,
-    codePrefix: "RDR2",
-  },
-];
-
-const STORAGE_KEY = "keyvault_orders_v1";
-const KEY_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const SAVED_CODES_KEY = "keyvault_saved_codes_v2";
 
 export function formatBRL(priceCents: number): string {
   return new Intl.NumberFormat("pt-BR", {
@@ -81,61 +32,35 @@ export function formatBRL(priceCents: number): string {
   }).format(priceCents / 100);
 }
 
-export function generateActivationKey(prefix: string): string {
-  const segment = () => {
-    let out = "";
-    for (let i = 0; i < 4; i++) {
-      const idx = Math.floor(Math.random() * KEY_CHARS.length);
-      out += KEY_CHARS[idx] ?? "A";
-    }
-    return out;
-  };
-  return `${prefix.toUpperCase()}-${segment()}-${segment()}-${segment()}`;
-}
-
 export function normalizeCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, "");
 }
 
-export function validateActivationCode(
-  raw: string,
-  prefix: string,
-  existingOrders: GameOrder[]
-): { ok: true; code: string } | { ok: false; error: string } {
+export function isValidKeyFormat(raw: string, prefix?: string): boolean {
   const normalized = normalizeCode(raw);
-  if (!normalized) {
-    return { ok: false, error: "Informe um código de ativação." };
-  }
-  const pattern = new RegExp(`^${prefix.toUpperCase()}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$`);
-  if (!pattern.test(normalized)) {
-    return {
-      ok: false,
-      error: `Use o formato ${prefix.toUpperCase()}-XXXX-XXXX-XXXX.`,
-    };
-  }
-  if (existingOrders.some((o) => o.activationCode === normalized)) {
-    return { ok: false, error: "Este código já foi resgatado." };
-  }
-  return { ok: true, code: normalized };
+  const head = prefix ? prefix.toUpperCase() : "[A-Z0-9]{4}";
+  return new RegExp(`^${head}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$`).test(normalized);
 }
 
-export function loadOrders(): GameOrder[] {
+export function loadSavedCodes(): string[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(SAVED_CODES_KEY);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as GameOrder[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is string => typeof item === "string" && item.length > 0);
   } catch {
     return [];
   }
 }
 
-export function saveOrder(order: GameOrder): GameOrder[] {
-  const current = loadOrders();
-  const next = [order, ...current];
+export function rememberCode(code: string): string[] {
+  const normalized = normalizeCode(code);
+  const current = loadSavedCodes().filter((c) => c !== normalized);
+  const next = [normalized, ...current].slice(0, 50);
   if (typeof window !== "undefined") {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    window.localStorage.setItem(SAVED_CODES_KEY, JSON.stringify(next));
   }
   return next;
 }
