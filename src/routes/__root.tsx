@@ -9,6 +9,7 @@ import {
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -75,22 +76,23 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
-    // Replace these placeholders with the app's name and description when first building the app.
-    // Each content route, / included, must still set its own head(). Never add og:image or
-    // twitter:image here: every page without its own would inherit the root's preview image.
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "KeyVault — Seu próximo jogo, na hora" },
+      { name: "description", content: "Chaves de ativação oficiais com entrega digital imediata." },
+      { property: "og:title", content: "KeyVault — Seu próximo jogo, na hora" },
+      { property: "og:description", content: "Chaves de ativação oficiais com entrega digital imediata." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -106,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
@@ -123,8 +125,35 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="border-b border-border/80 bg-background/95 backdrop-blur">
+          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+            <Link to="/" className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-foreground">
+              <span className="inline-block h-4 w-1.5 rounded-xs bg-primary" aria-hidden="true" />
+              KeyVault
+            </Link>
+            <nav className="flex items-center gap-5 text-sm font-medium">
+              <Link
+                to="/"
+                activeOptions={{ exact: true }}
+                activeProps={{ className: "text-foreground" }}
+                inactiveProps={{ className: "text-muted-foreground hover:text-foreground transition-colors" }}
+              >
+                Vitrine
+              </Link>
+              <Link
+                to="/pedidos"
+                activeProps={{ className: "text-foreground" }}
+                inactiveProps={{ className: "text-muted-foreground hover:text-foreground transition-colors" }}
+              >
+                Meus pedidos
+              </Link>
+            </nav>
+          </div>
+        </header>
+        <Outlet />
+      </div>
+      <Toaster theme="dark" position="bottom-right" />
     </QueryClientProvider>
   );
 }
