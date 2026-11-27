@@ -62,7 +62,7 @@ export const purchaseGame = createServerFn({ method: "POST" })
 
     const { data: claimed, error: claimError } = await supabaseAdmin.rpc("purchase_game_key", {
       p_game_id: data.gameId,
-      p_buyer_email: email || undefined,
+      ...(email ? { p_buyer_email: email } : {}),
     });
 
     if (claimError) {
@@ -101,7 +101,7 @@ export const activateKey = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: raw, error } = await supabaseAdmin.rpc("activate_game_key", {
       p_code: normalized,
-      p_expected_game_id: data.expectedGameId ?? undefined,
+      ...(data.expectedGameId ? { p_expected_game_id: data.expectedGameId } : {}),
     });
 
     if (error || !raw || typeof raw !== "object" || Array.isArray(raw)) {
