@@ -1,6 +1,6 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { KeyRound, ShoppingBag } from "lucide-react";
+import { KeyRound, ShoppingBag, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { GtaPurchaseDialog, type DialogMode } from "../components/GtaPurchaseDialog";
 import { formatBRL, type CatalogGame } from "../lib/catalog";
@@ -15,15 +15,15 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQueryOptions),
   head: () => ({
     meta: [
-      { title: "KeyVault — Seu próximo jogo, na hora" },
+      { title: "Vice City Key Shop — Seu próximo jogo, na hora" },
       {
         name: "description",
-        content: "Chaves de ativação oficiais com entrega digital imediata. GTA 6 disponível para compra e resgate de código.",
+        content: "Encontre jogos e confira ofertas de GTA no Mercado Livre.",
       },
-      { property: "og:title", content: "KeyVault — Seu próximo jogo, na hora" },
+      { property: "og:title", content: "Vice City Key Shop" },
       {
         property: "og:description",
-        content: "Chaves de ativação oficiais com entrega digital imediata. GTA 6 disponível para compra e resgate de código.",
+        content: "Encontre jogos e confira ofertas de GTA no Mercado Livre.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -53,7 +53,42 @@ function Index() {
           Seu próximo jogo, <span className="text-primary">na hora.</span>
         </h1>
         <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-          Chaves de ativação oficiais com entrega digital imediata.
+          Encontre jogos e confira ofertas de GTA no Mercado Livre.
+        </p>
+      </section>
+
+      <section aria-labelledby="marketplace-heading" className="mt-10 rounded-xl border border-border bg-card p-5 sm:p-6">
+        <div className="max-w-3xl">
+          <h2 id="marketplace-heading" className="text-xl font-bold tracking-tight text-foreground">
+            Ofertas de GTA no Mercado Livre
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            Pesquise anúncios do Mercado Livre. Você será direcionado ao marketplace para conferir
+            preço, plataforma, região de ativação, reputação do vendedor e condições do anúncio.
+          </p>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <a
+            href="https://lista.mercadolivre.com.br/gta-v"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Procurar GTA V <ExternalLink className="h-4 w-4" />
+          </a>
+          <a
+            href="https://lista.mercadolivre.com.br/gta-6"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            Procurar GTA VI <ExternalLink className="h-4 w-4" />
+          </a>
+        </div>
+        <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+          Importante: esses links apenas pesquisam anúncios. A Vice City Key Shop não valida,
+          compra nem recebe chaves automaticamente. Só considere códigos oficiais, não utilizados
+          e compatíveis com sua plataforma; desconfie de anúncios que vendam contas compartilhadas.
         </p>
       </section>
 
