@@ -1,26 +1,26 @@
-# Vice City Key Shop
+# Vice City Key Shop — edição local
 
-(https://game-key-grove.lovable.app) adicione o jogo GTA 6 nele como opçao de comprar e de codigo
+Esta versão funciona sem Supabase, sem banco de dados externo e sem serviços pagos.
 
-This project was built with [Lovable](https://lovable.dev).
+## Como iniciar no Windows
 
-**Live app**: https://vice-city-key-shop.lovable.app
+1. Instale o Node.js LTS.
+2. Abra o PowerShell dentro da pasta do projeto.
+3. Execute, um comando por vez:
 
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/b903b572-567a-4f98-aba8-1cbf6d0a0d05).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+```powershell
+npm install
 npm run dev
 ```
+
+4. Abra o endereço local exibido pelo Vite (normalmente http://localhost:3000).
+
+## Como os dados funcionam
+
+O catálogo, o estoque de códigos e os pedidos são armazenados no localStorage do navegador. Portanto, os dados ficam apenas neste navegador e neste dispositivo. Limpar os dados do navegador pode apagar o estoque e os pedidos. Esta edição não sincroniza dados entre amigos ou computadores.
+
+Os códigos são códigos internos de demonstração da Vice City Key Shop. Resgatá-los libera um item apenas dentro desta loja; não concede licença oficial de PlayStation, Rockstar, Steam ou outra plataforma. A compra é simulada e não processa pagamentos.
+
+## Projeto
+
+A interface usa React, TanStack Start e Vite. Supabase não é necessário nesta edição.

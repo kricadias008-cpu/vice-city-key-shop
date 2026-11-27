@@ -1,7 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy, KeyRound, ShieldCheck, ShoppingBag, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,8 +17,6 @@ interface GtaPurchaseDialogProps {
 
 export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDialogProps) {
   const queryClient = useQueryClient();
-  const runPurchase = useServerFn(purchaseGame);
-  const runActivate = useServerFn(activateKey);
 
   const [mode, setMode] = useState<DialogMode>(initialMode);
   const [email, setEmail] = useState("");
@@ -51,9 +48,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
     setError(null);
     setSubmitting(true);
     try {
-      const res = await runPurchase({
-        data: trimmedEmail ? { gameId: game.id, buyerEmail: trimmedEmail } : { gameId: game.id },
-      });
+      const res = await purchaseGame(trimmedEmail ? { gameId: game.id, buyerEmail: trimmedEmail } : { gameId: game.id });
       if (!res.ok) {
         setError(res.error);
         return;
@@ -74,9 +69,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
     setError(null);
     setSubmitting(true);
     try {
-      const res = await runActivate({
-        data: { code: codeInput, expectedGameId: game.id },
-      });
+      const res = await activateKey({ code: codeInput, expectedGameId: game.id });
       if (!res.ok) {
         setError(res.error);
         return;
@@ -84,7 +77,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
       rememberCode(res.order.activationCode);
       setCompletedOrder(res.order);
       await queryClient.invalidateQueries({ queryKey: ["catalog"] });
-      toast.success(`Chave de ${game.title} ativada!`);
+      toast.success(`Código de ${game.title} resgatado!`);
     } catch {
       setError("Erro ao validar a chave. Tente novamente.");
     } finally {
@@ -96,9 +89,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
     if (!completedOrder || completedOrder.status === "activated") return;
     setSubmitting(true);
     try {
-      const res = await runActivate({
-        data: { code: completedOrder.activationCode, expectedGameId: game.id },
-      });
+      const res = await activateKey({ code: completedOrder.activationCode, expectedGameId: game.id });
       if (!res.ok) {
         toast.error(res.error);
         return;
@@ -133,7 +124,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
             <div>
               <Dialog.Title className="text-xl font-bold tracking-tight">{game.title}</Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-muted-foreground">
-                Chave {game.platform} • Entrega digital imediata
+                Código interno da loja • Liberação local imediata
               </Dialog.Description>
             </div>
             <Dialog.Close asChild>
@@ -152,7 +143,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
               <div className="rounded-lg border border-primary/40 bg-background/70 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-medium uppercase tracking-wider text-primary">
-                    {completedOrder.status === "activated" ? "Chave ativada — jogo desbloqueado" : "Chave liberada"}
+                    {completedOrder.status === "activated" ? "Código resgatado — item liberado na loja" : "Código liberado"}
                   </p>
                   {completedOrder.status === "activated" && (
                     <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -185,7 +176,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
               )}
               <p className="text-xs text-muted-foreground">
                 {completedOrder.status === "activated"
-                  ? "Esta chave foi validada e marcada como usada no servidor. Ninguém mais pode reutilizá-la."
+                  ? "Este código foi marcado como utilizado neste navegador e não pode ser resgatado novamente aqui."
                   : "Esta chave foi reservada para você. Ative agora ou depois em Meus pedidos."}
               </p>
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -296,7 +287,7 @@ export function GtaPurchaseDialog({ game, initialMode, onClose }: GtaPurchaseDia
                       className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm uppercase tracking-wider text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     />
                     <p className="text-xs text-muted-foreground">
-                      A chave é validada no estoque real e só pode ser ativada uma vez.
+                      O código é validado no estoque salvo neste navegador e só pode ser usado uma vez aqui.
                     </p>
                   </div>
                   {error && <p className="text-sm text-destructive">{error}</p>}

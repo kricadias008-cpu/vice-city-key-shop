@@ -79,9 +79,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "KeyVault — Seu próximo jogo, na hora" },
-      { name: "description", content: "Chaves de ativação oficiais com entrega digital imediata." },
-      { property: "og:title", content: "KeyVault — Seu próximo jogo, na hora" },
+      { title: "Vice City Key Shop — Sua biblioteca de jogos" },
+      { name: "description", content: "Códigos internos da loja, salvos neste navegador." },
+      { property: "og:title", content: "Vice City Key Shop — Sua biblioteca de jogos" },
       { property: "og:description", content: "Chaves de ativação oficiais com entrega digital imediata." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -130,7 +130,7 @@ function RootComponent() {
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link to="/" className="flex items-center gap-2.5 text-lg font-bold tracking-tight text-foreground">
               <span className="inline-block h-4 w-1.5 rounded-xs bg-primary" aria-hidden="true" />
-              KeyVault
+              Vice City Key Shop
             </Link>
             <nav className="flex items-center gap-5 text-sm font-medium">
               <Link

@@ -15,15 +15,15 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(catalogQueryOptions),
   head: () => ({
     meta: [
-      { title: "KeyVault — Seu próximo jogo, na hora" },
+      { title: "Vice City Key Shop — Sua biblioteca de jogos" },
       {
         name: "description",
-        content: "Chaves de ativação oficiais com entrega digital imediata. GTA 6 disponível para compra e resgate de código.",
+        content: "Códigos internos para liberar itens na biblioteca local da Vice City Key Shop.",
       },
-      { property: "og:title", content: "KeyVault — Seu próximo jogo, na hora" },
+      { property: "og:title", content: "Vice City Key Shop — Sua biblioteca de jogos" },
       {
         property: "og:description",
-        content: "Chaves de ativação oficiais com entrega digital imediata. GTA 6 disponível para compra e resgate de código.",
+        content: "Códigos internos para liberar itens na biblioteca local da Vice City Key Shop.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -50,10 +50,10 @@ function Index() {
     <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
       <section className="max-w-4xl">
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
-          Seu próximo jogo, <span className="text-primary">na hora.</span>
+          Seus jogos, <span className="text-primary">do seu jeito.</span>
         </h1>
         <p className="mt-4 text-base text-muted-foreground sm:text-lg">
-          Chaves de ativação oficiais com entrega digital imediata.
+          Códigos internos para liberar itens na biblioteca local.
         </p>
       </section>
 
