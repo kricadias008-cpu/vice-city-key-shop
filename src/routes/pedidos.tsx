@@ -44,7 +44,7 @@ function PedidosPage() {
     } finally {
       setLoaded(true);
     }
-  }, [runLookup]);
+  }, []);
 
   useEffect(() => {
     void refreshOrders();
