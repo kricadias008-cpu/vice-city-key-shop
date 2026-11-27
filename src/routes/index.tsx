@@ -69,20 +69,36 @@ function Index() {
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <a
-            href="https://lista.mercadolivre.com.br/gta-v"
+            href="https://lista.mercadolivre.com.br/gta-v-ps5"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Procurar GTA V <ExternalLink className="h-4 w-4" />
+            GTA V para PS5 <ExternalLink className="h-4 w-4" />
           </a>
           <a
-            href="https://lista.mercadolivre.com.br/gta-6"
+            href="https://lista.mercadolivre.com.br/gta-v-pc"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-accent"
           >
-            Procurar GTA VI <ExternalLink className="h-4 w-4" />
+            GTA V para PC <ExternalLink className="h-4 w-4" />
+          </a>
+          <a
+            href="https://lista.mercadolivre.com.br/gta-6-ps5"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            GTA VI para PS5 <ExternalLink className="h-4 w-4" />
+          </a>
+          <a
+            href="https://lista.mercadolivre.com.br/gta-6-pc"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-accent"
+          >
+            GTA VI para PC <ExternalLink className="h-4 w-4" />
           </a>
         </div>
         <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
