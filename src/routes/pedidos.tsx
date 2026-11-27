@@ -1,6 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Check, Copy, KeyRound, ShieldCheck } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -23,8 +22,6 @@ export const Route = createFileRoute("/pedidos")({
 
 function PedidosPage() {
   const queryClient = useQueryClient();
-  const runLookup = useServerFn(lookupMyKeys);
-  const runActivate = useServerFn(activateKey);
 
   const [orders, setOrders] = useState<GameOrder[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -42,7 +39,7 @@ function PedidosPage() {
       return;
     }
     try {
-      const rows = await runLookup({ data: { codes } });
+      const rows = await lookupMyKeys({ codes });
       setOrders(rows);
     } finally {
       setLoaded(true);
@@ -67,7 +64,7 @@ function PedidosPage() {
   const handleActivateOrder = async (order: GameOrder) => {
     setActivatingId(order.keyId);
     try {
-      const res = await runActivate({ data: { code: order.activationCode } });
+      const res = await activateKey({ code: order.activationCode });
       if (!res.ok) {
         toast.error(res.error);
         return;
@@ -87,7 +84,7 @@ function PedidosPage() {
     setQuickError(null);
     setQuickLoading(true);
     try {
-      const res = await runActivate({ data: { code: quickCode } });
+      const res = await activateKey({ code: quickCode });
       if (!res.ok) {
         setQuickError(res.error);
         return;
@@ -110,7 +107,7 @@ function PedidosPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Meus pedidos</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Status real das suas chaves compradas e ativadas no cofre da KeyVault.
+            Histórico de códigos resgatados e compras simuladas neste navegador.
           </p>
         </div>
         <Link
@@ -123,7 +120,7 @@ function PedidosPage() {
 
       <form onSubmit={handleQuickActivate} className="mt-8 rounded-xl border border-border bg-card p-5">
         <label htmlFor="quick-key" className="text-sm font-medium text-foreground">
-          Ativar uma chave
+          Resgatar um código
         </label>
         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
           <input
@@ -140,7 +137,7 @@ function PedidosPage() {
             className="inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
             <KeyRound className="h-4 w-4" />
-            {quickLoading ? "Validando..." : "Ativar chave"}
+            {quickLoading ? "Validando..." : "Resgatar código"}
           </button>
         </div>
         {quickError && <p className="mt-2 text-sm text-destructive">{quickError}</p>}
@@ -181,11 +178,11 @@ function PedidosPage() {
                       }`}
                     >
                       {isActivated && <ShieldCheck className="h-3.5 w-3.5" />}
-                      {isActivated ? "Ativado" : "Aguardando ativação"}
+                      {isActivated ? "Ativado" : "Comprado"}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Chave {order.platform}
+                    Código interno • {order.platform}
                     {timestamp
                       ? ` • ${new Intl.DateTimeFormat("pt-BR", {
                           dateStyle: "short",
@@ -222,7 +219,7 @@ function PedidosPage() {
                       className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      {activatingId === order.keyId ? "Ativando..." : "Ativar"}
+                      {activatingId === order.keyId ? "Ativando..." : "Resgatar"}
                     </button>
                   )}
                 </div>
